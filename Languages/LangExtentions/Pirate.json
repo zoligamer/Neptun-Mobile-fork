@@ -189,5 +189,8 @@
   "topmenu_UnreadMessagesBadge": "%0 fresh bottles",
   "topmenu_NoUnreadMessages": "No bottles in sea",
   "topmenu_MessagesTitle": "Bottles o' Mail",
-  "topmenu_PaymentsTitle": "Booty & Dues"
+  "topmenu_PaymentsTitle": "Booty & Dues",
+  "calendarPage_weekNav_JumpToCurrentWeek": "Sail back to this week, arrr!",
+  "messagePage_MarkAllAsRead": "Mark all bottles as read, matey!",
+  "messagePage_AllMarkedAsReadToast": "All scrolls read, ahoy! ✉️"
 }

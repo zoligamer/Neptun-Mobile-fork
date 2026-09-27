@@ -189,5 +189,8 @@
   "topmenu_UnreadMessagesBadge": "%0 mesaje noi",
   "topmenu_NoUnreadMessages": "Niciun mesaj nou",
   "topmenu_MessagesTitle": "Mesaje",
-  "topmenu_PaymentsTitle": "Plăți"
+  "topmenu_PaymentsTitle": "Plăți",
+  "calendarPage_weekNav_JumpToCurrentWeek": "Salt la săptămâna curentă",
+  "messagePage_MarkAllAsRead": "Marchează toate ca citite",
+  "messagePage_AllMarkedAsReadToast": "Toate mesajele au fost marcate ca citite! ✉️"
 }

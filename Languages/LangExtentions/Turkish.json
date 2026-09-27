@@ -189,5 +189,8 @@
   "topmenu_UnreadMessagesBadge": "%0 yeni mesaj",
   "topmenu_NoUnreadMessages": "Yeni mesaj yok",
   "topmenu_MessagesTitle": "Mesajlar",
-  "topmenu_PaymentsTitle": "Ödemeler"
+  "topmenu_PaymentsTitle": "Ödemeler",
+  "calendarPage_weekNav_JumpToCurrentWeek": "Geçerli haftaya atla",
+  "messagePage_MarkAllAsRead": "Tümünü okundu olarak işaretle",
+  "messagePage_AllMarkedAsReadToast": "Tüm mesajlar okundu olarak işaretlendi! ✉️"
 }

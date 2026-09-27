@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:linked_scroll_controller/linked_scroll_controller.dart';
 import 'package:neptun2/API/ics_calendar.dart';
@@ -827,7 +828,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin{
         final breakStart = prevClass.endEpoch;
         final breakEnd = item.startEpoch;
         final breakMs = breakEnd - breakStart;
-        if (breakMs >= 5 * 60 * 1000) { // legalább 5 perces szünet
+        if (breakMs >= 5 * 60 * 1000 && breakMs < 24 * 3600 * 1000) { // legalább 5 perces és maximum 24 órás szünet
           final isCurrentBreak = now.millisecondsSinceEpoch >= breakStart &&
               now.millisecondsSinceEpoch < breakEnd &&
               wkday == currWeekday &&
@@ -886,7 +887,45 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin{
           break;
       }
     }
-    calendarTabController.index = currentWeekOffset == 1 ? (currWeekday - 1 > 6 ? 0 : currWeekday - 1) : calendarTabController.index;
+
+    final dayLists = [
+      mondayCalendar,
+      tuesdayCalendar,
+      wednessdayCalendar,
+      thursdayCalendar,
+      fridayCalendar,
+      saturdayCalendar,
+      sundayCalendar,
+    ];
+
+    bool dayHasClasses(int dayIdx) {
+      if (dayIdx < 0 || dayIdx >= dayLists.length) return false;
+      return dayLists[dayIdx].any((w) => w is t_table.TimetableElementWidget);
+    }
+
+    int firstDayWithClasses() {
+      for (int i = 0; i < dayLists.length; i++) {
+        if (dayHasClasses(i)) return i;
+      }
+      return 0; // Alapértelmezett: Hétfő
+    }
+
+    int targetIndex = calendarTabController.index;
+
+    if (currentWeekOffset == 1) {
+      int todayIndex = currWeekday - 1;
+      if (todayIndex < 0 || todayIndex > 6) todayIndex = 0;
+      targetIndex = todayIndex;
+    } else {
+      // Másik hétre váltáskor: ha az adott napon nincs óra, ugorjunk a hét első tanórás napjára (pl. Hétfőre)
+      if (!dayHasClasses(targetIndex)) {
+        targetIndex = firstDayWithClasses();
+      }
+    }
+
+    if (targetIndex >= 0 && targetIndex < calendarTabController.length) {
+      calendarTabController.index = targetIndex;
+    }
   }
 
   List<Widget> calendarTabs = <Widget>[].toList();
@@ -1162,7 +1201,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin{
     paymentsEntries.sort((a, b) => b.dueDateMs.compareTo(a.dueDateMs));
 
     for(var item in paymentsEntries){
-      if(item.completed){
+      if(item.completed && item.ammount < 0){
         totalMoney += item.ammount.abs();
       }
       if(!item.completed && (item.dueDateMs > DateTime.now().millisecondsSinceEpoch || item.dueDateMs == 0)){
@@ -1438,6 +1477,25 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin{
         });
       },));
     }
+  }
+
+  Future<void> markAllMailsAsRead() async {
+    for (var item in mailEntries) {
+      item.isRead = true;
+    }
+    unreadMailCount = 0;
+    await storage.saveInt('CachedMailsUnread', 0);
+    await storage.DataCache.setUnreadMailCount(0);
+    setupMails(clear: true);
+
+    Fluttertoast.showToast(
+      msg: AppStrings.getLanguagePack().messagePage_AllMarkedAsReadToast,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.SNACKBAR,
+      backgroundColor: AppColors.getTheme().rootBackground,
+      textColor: AppColors.getTheme().textColor,
+    );
+    if (mounted) setState(() {});
   }
 
   Future<void> stepCalendarBack() async{
@@ -1900,7 +1958,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin{
     final timepassSinceSepOne = Duration(milliseconds: (yearlessNow.millisecondsSinceEpoch - sepOne.millisecondsSinceEpoch));
     final weeksPassed = timepassSinceSepOne.inDays / 7;
     final userOffset = storage.DataCache.getUserWeekOffset()!;
-    return ((weeksPassed.floor() % 52) + (currentWeekOffset + userOffset));// - isWeekend;// + isWeekend;
+    int rawWeek = (weeksPassed.floor() + currentWeekOffset + userOffset);
+    if (rawWeek <= 0) {
+      return ((rawWeek % 52) + 52);
+    }
+    return ((rawWeek - 1) % 52) + 1;
   }
   
   int calcPassedWeekOffsetless(){
@@ -2003,64 +2065,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin{
           Visibility(
             visible: currentView == 4,
             child: MailsPageWidget(homePage: this),
-          ),
-          Visibility(
-            visible: currentView == 0 && currentWeekOffset != 1 && canDoCalendarPaging && !keepHomeButtonHidden,
-            child: GestureDetector(
-              onPanEnd: (_){
-                setState(() {
-                  _fbNeedAnimate = true;
-                });
-                _fbController.forward(from: 0).whenComplete(() {
-                  final size = MediaQuery.of(context).size;
-
-                  setState(() {
-                    _fbPosX = size.width - 90;
-                    _fbPosY = size.height - 140;
-                  });
-                });
-              },
-              onPanStart: (_){
-                setState(() {
-                  _fbNeedAnimate = false;
-                });
-              },
-              onPanUpdate: (details){
-                final size = MediaQuery.of(context).size;
-
-                setState(() {
-                  _fbPosX += details.delta.dx;
-                  _fbPosY += details.delta.dy;
-
-                  _fbPosX = _fbPosX < 20 ? 20 : (_fbPosX > size.width - 80 ? size.width - 80 : _fbPosX);
-                  _fbPosY = _fbPosY < 120 ? 120 : (_fbPosY > size.height - 140 ? size.height - 140 : _fbPosY);
-                });
-              },
-              child: AnimatedBuilder(
-                animation: _fbController,
-                builder: (context, child) {
-                  return Padding(
-                    padding: EdgeInsets.only(left: _fbNeedAnimate ? (lerpDouble(_fbPosX, MediaQuery.of(context).size.width - 90, _fbTween.value))! : _fbPosX, top: _fbNeedAnimate ? ((lerpDouble(_fbPosY, MediaQuery.of(context).size.height - 140, _fbTween.value))!) : _fbPosY),
-                    child: IconButton(
-                      onPressed: (() async {
-                        AppHaptics.lightImpact();
-                        keepHomeButtonHidden = true;
-                        currentWeekOffset = 1;
-                        await onCalendarRefresh(false);
-                      }),
-                      icon: Icon(
-                        Icons.home_outlined,
-                        color: AppColors.getTheme().onPrimary,
-                      ),
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all(const EdgeInsets.all(15)),
-                        backgroundColor: WidgetStateProperty.all(AppColors.getTheme().primary)
-                      ),
-                    ),
-                  );
-                }
-              ),
-            ),
           ),
           Visibility(
             visible: _showBlur,
@@ -2551,6 +2555,83 @@ class MailsPageWidget extends StatelessWidget{
               children: <Widget>[
                 topnav.TopNavigatorWidget(homePage: homePage, displayString: AppStrings.getLanguagePack().view_header_Messages, smallHintText: AppStrings.getStringWithParams(AppStrings.getLanguagePack().topheader_messages_UnreadMessages, [homePage.unreadMailCount]), loggedInUsername: storage.DataCache.getUsername()!, loggedInURL: storage.DataCache.getInstituteUrl()!.replaceAll(RegExp(r'/hallgato/MobileService\.svc'), '').replaceAll("https://", '')),
                 HomePageState.getSeparatorLine(context),
+                if (homePage.mailEntries.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.getTheme().textColor.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.getTheme().textColor.withValues(alpha: 0.08),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              homePage.unreadMailCount > 0 ? Icons.mark_email_unread_rounded : Icons.mark_email_read_rounded,
+                              size: 18,
+                              color: homePage.unreadMailCount > 0 ? AppColors.getTheme().primary : AppColors.getTheme().currentClassGreen,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              homePage.unreadMailCount > 0
+                                  ? AppStrings.getStringWithParams(AppStrings.getLanguagePack().topmenu_UnreadMessagesBadge, [homePage.unreadMailCount])
+                                  : AppStrings.getLanguagePack().topmenu_NoUnreadMessages,
+                              style: TextStyle(
+                                color: AppColors.getTheme().textColor,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (homePage.unreadMailCount > 0)
+                          InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () async {
+                              AppHaptics.lightImpact();
+                              await homePage.markAllMailsAsRead();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.getTheme().primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.getTheme().primary,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.done_all_rounded,
+                                    size: 16,
+                                    color: AppColors.getTheme().primary,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    AppStrings.getLanguagePack().messagePage_MarkAllAsRead,
+                                    style: TextStyle(
+                                      color: AppColors.getTheme().primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 Expanded(
                     child: RefreshIndicator(
                         onRefresh: onRefresh,

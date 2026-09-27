@@ -6,6 +6,7 @@ import '../Misc/emojirich_text.dart';
 import '../Misc/popup.dart';
 import '../Pages/main_page.dart';
 import '../colors.dart';
+import '../haptics.dart';
 
 typedef Callback = Future<void> Function();
 
@@ -622,22 +623,12 @@ class WeekoffseterElementWidget extends StatelessWidget{
         if(!homePage.calendarWeekCanNavigate || !canDoPaging){
           return;
         }
-        if(homePage.calendarWeekSwitchValue < -20 && week < 52){
-          if(homePage.weeksSinceStart + 1 > 52){
-            homePage.calendarWeekCanNavigate = false;
-            homePage.calendarWeekSwitchValue = 0.0;
-            return;
-          }
+        if(homePage.calendarWeekSwitchValue < -20){
           homePage.calendarWeekSwitchValue = -5.0;
           onForwardPressed();
           return;
         }
-        else if(homePage.calendarWeekSwitchValue > 20 && week > 1){
-          if(homePage.weeksSinceStart - 1 < 1){
-            homePage.calendarWeekCanNavigate = false;
-            homePage.calendarWeekSwitchValue = 0.0;
-            return;
-          }
+        else if(homePage.calendarWeekSwitchValue > 20){
           homePage.calendarWeekSwitchValue = 5.0;
           onBackPressed();
           return;
@@ -663,22 +654,66 @@ class WeekoffseterElementWidget extends StatelessWidget{
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     IconButton(
-                      onPressed: week <= 1 || !canDoPaging ? null : onBackPressed,
+                      onPressed: !canDoPaging ? null : onBackPressed,
                       icon: const Icon(Icons.arrow_back_rounded),
                     ),
                     Expanded(
-                      child: Text(
-                        displayString,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.getTheme().textColor,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16.0,
-                        ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            displayString,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.getTheme().textColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16.0,
+                            ),
+                          ),
+                          if (homePage.currentWeekOffset != 1) ...[
+                            const SizedBox(height: 4),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () async {
+                                AppHaptics.lightImpact();
+                                homePage.currentWeekOffset = 1;
+                                await homePage.onCalendarRefresh(false);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.getTheme().primary.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.getTheme().primary, width: 1),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.today_rounded,
+                                      size: 13,
+                                      color: AppColors.getTheme().primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      AppStrings.getLanguagePack().calendarPage_weekNav_JumpToCurrentWeek,
+                                      style: TextStyle(
+                                        color: AppColors.getTheme().primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     IconButton(
-                        onPressed: week >= 52 || !canDoPaging ? null : onForwardPressed,
+                        onPressed: !canDoPaging ? null : onForwardPressed,
                         icon: const Icon(Icons.arrow_forward_rounded)
                     ),
                   ],

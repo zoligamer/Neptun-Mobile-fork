@@ -189,5 +189,8 @@
   "topmenu_UnreadMessagesBadge": "%0 новых сообщений",
   "topmenu_NoUnreadMessages": "Нет новых сообщений",
   "topmenu_MessagesTitle": "Сообщения",
-  "topmenu_PaymentsTitle": "Платежи"
+  "topmenu_PaymentsTitle": "Платежи",
+  "calendarPage_weekNav_JumpToCurrentWeek": "Перейти к текущей неделе",
+  "messagePage_MarkAllAsRead": "Отметить все как прочитанные",
+  "messagePage_AllMarkedAsReadToast": "Все сообщения помечены как прочитанные! ✉️"
 }

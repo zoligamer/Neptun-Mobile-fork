@@ -137,6 +137,7 @@ class AppStrings{
       calendarPage_weekNav_ClassesThisWeekEmpty: 'Üres ez a heted! 🥳',
       calendarPage_weekNav_ClassesThisWeekLoading: 'Gondolkodunk... 🤔',
       calendarPage_weekNav_StudyWeek: '%0. oktatási hét',
+      calendarPage_weekNav_JumpToCurrentWeek: 'Ugrás a mai hétre',
       markbookPage_AverageDisplay: 'Átlagod: %0 %1',
       markbookPage_AverageScholarshipDisplay: 'Ösztöndíj indexed: %0 %1',
       markbookPage_NoGrades: 'nincs jegyed',
@@ -154,6 +155,8 @@ class AppStrings{
       periodPage_ExpiredDays: '(%0 napja)',
       messagePage_SentBy: 'Küldte: %0',
       messagePage_Empty: '😥Nincs Üzeneted😥',
+      messagePage_MarkAllAsRead: 'Mind olvasottnak jelölése',
+      messagePage_AllMarkedAsReadToast: 'Minden üzenet olvasottnak jelölve! ✉️',
       popup_case0_GhostGradeHeader: '👻 Szellemjegy 👻',
       popup_case0_SelectGrade: 'Válassz jegyet...',
       popup_caseAll_OkButton: 'Ok',
@@ -330,6 +333,7 @@ class AppStrings{
       calendarPage_weekNav_ClassesThisWeekEmpty: 'This week is empty! 🥳',
       calendarPage_weekNav_ClassesThisWeekLoading: 'Thinking... 🤔',
       calendarPage_weekNav_StudyWeek: '%0. education week',
+      calendarPage_weekNav_JumpToCurrentWeek: 'Jump to current week',
       markbookPage_AverageDisplay: 'Average: %0 %1',
       markbookPage_AverageScholarshipDisplay: 'Scholarship index: %0 %1',
       markbookPage_NoGrades: 'You have no grades',
@@ -347,6 +351,8 @@ class AppStrings{
       periodPage_ExpiredDays: '(%0 days ago)',
       messagePage_SentBy: 'Sent by: %0',
       messagePage_Empty: '😥You don\'t have any messages😥',
+      messagePage_MarkAllAsRead: 'Mark all as read',
+      messagePage_AllMarkedAsReadToast: 'All messages marked as read! ✉️',
       popup_case0_GhostGradeHeader: '👻 Ghost grade 👻',
       popup_case0_SelectGrade: 'Select grade...',
       popup_caseAll_OkButton: 'Ok',
@@ -692,6 +698,7 @@ class LanguagePack{
   final String calendarPage_weekNav_ClassesThisWeekLoading;
   final String calendarPage_weekNav_ClassesThisWeekEmpty;
   final String calendarPage_FreeDay;
+  final String calendarPage_weekNav_JumpToCurrentWeek;
 
   final String markbookPage_AverageDisplay;
   final String markbookPage_AverageScholarshipDisplay;
@@ -713,6 +720,8 @@ class LanguagePack{
 
   final String messagePage_SentBy;
   final String messagePage_Empty;
+  final String messagePage_MarkAllAsRead;
+  final String messagePage_AllMarkedAsReadToast;
 
   final String popup_case0_GhostGradeHeader;
   final String popup_caseAll_OkButton;
@@ -881,6 +890,7 @@ class LanguagePack{
     required this.calendarPage_weekNav_ClassesThisWeekFull,
     required this.calendarPage_weekNav_ClassesThisWeekOneDay,
     required this.calendarPage_weekNav_StudyWeek,
+    required this.calendarPage_weekNav_JumpToCurrentWeek,
     required this.calendarPage_weekNav_ClassesThisWeekEmpty,
     required this.calendarPage_weekNav_ClassesThisWeekLoading,
     required this.markbookPage_AverageDisplay,
@@ -900,6 +910,8 @@ class LanguagePack{
     required this.periodPage_Starts,
     required this.messagePage_SentBy,
     required this.messagePage_Empty,
+    required this.messagePage_MarkAllAsRead,
+    required this.messagePage_AllMarkedAsReadToast,
     required this.popup_case0_GhostGradeHeader,
     required this.popup_case0_SelectGrade,
     required this.popup_caseAll_OkButton,
@@ -1097,6 +1109,7 @@ class LanguagePack{
         calendarPage_weekNav_ClassesThisWeekFull: getStr('calendarPage_weekNav_ClassesThisWeekFull', en.calendarPage_weekNav_ClassesThisWeekFull),
         calendarPage_weekNav_ClassesThisWeekOneDay: getStr('calendarPage_weekNav_ClassesThisWeekOneDay', en.calendarPage_weekNav_ClassesThisWeekOneDay),
         calendarPage_weekNav_StudyWeek: getStr('calendarPage_weekNav_StudyWeek', en.calendarPage_weekNav_StudyWeek),
+        calendarPage_weekNav_JumpToCurrentWeek: getStr('calendarPage_weekNav_JumpToCurrentWeek', en.calendarPage_weekNav_JumpToCurrentWeek),
         calendarPage_weekNav_ClassesThisWeekEmpty: getStr('calendarPage_weekNav_ClassesThisWeekEmpty', en.calendarPage_weekNav_ClassesThisWeekEmpty),
         calendarPage_weekNav_ClassesThisWeekLoading: getStr('calendarPage_weekNav_ClassesThisWeekLoading', en.calendarPage_weekNav_ClassesThisWeekLoading),
         markbookPage_AverageDisplay: getStr('markbookPage_AverageDisplay', en.markbookPage_AverageDisplay),
@@ -1116,6 +1129,8 @@ class LanguagePack{
         periodPage_Starts: getStr('periodPage_Starts', en.periodPage_Starts),
         messagePage_SentBy: getStr('messagePage_SentBy', en.messagePage_SentBy),
         messagePage_Empty: getStr('messagePage_Empty', en.messagePage_Empty),
+        messagePage_MarkAllAsRead: getStr('messagePage_MarkAllAsRead', en.messagePage_MarkAllAsRead),
+        messagePage_AllMarkedAsReadToast: getStr('messagePage_AllMarkedAsReadToast', en.messagePage_AllMarkedAsReadToast),
         popup_case0_GhostGradeHeader: getStr('popup_case0_GhostGradeHeader', en.popup_case0_GhostGradeHeader),
         popup_case0_SelectGrade: getStr('popup_case0_SelectGrade', en.popup_case0_SelectGrade),
         popup_caseAll_OkButton: getStr('popup_caseAll_OkButton', en.popup_caseAll_OkButton),
@@ -1313,6 +1328,7 @@ class LanguagePack{
       'calendarPage_weekNav_ClassesThisWeekFull':lang.calendarPage_weekNav_ClassesThisWeekFull,
       'calendarPage_weekNav_ClassesThisWeekOneDay':lang.calendarPage_weekNav_ClassesThisWeekOneDay,
       'calendarPage_weekNav_StudyWeek':lang.calendarPage_weekNav_StudyWeek,
+      'calendarPage_weekNav_JumpToCurrentWeek':lang.calendarPage_weekNav_JumpToCurrentWeek,
       'calendarPage_weekNav_ClassesThisWeekEmpty':lang.calendarPage_weekNav_ClassesThisWeekEmpty,
       'calendarPage_weekNav_ClassesThisWeekLoading':lang.calendarPage_weekNav_ClassesThisWeekLoading,
       'markbookPage_AverageDisplay':lang.markbookPage_AverageDisplay,
@@ -1332,6 +1348,8 @@ class LanguagePack{
       'periodPage_Starts':lang.periodPage_Starts,
       'messagePage_SentBy':lang.messagePage_SentBy,
       'messagePage_Empty':lang.messagePage_Empty,
+      'messagePage_MarkAllAsRead':lang.messagePage_MarkAllAsRead,
+      'messagePage_AllMarkedAsReadToast':lang.messagePage_AllMarkedAsReadToast,
       'popup_case0_GhostGradeHeader':lang.popup_case0_GhostGradeHeader,
       'popup_case0_SelectGrade':lang.popup_case0_SelectGrade,
       'popup_caseAll_OkButton':lang.popup_caseAll_OkButton,

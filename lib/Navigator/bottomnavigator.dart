@@ -101,6 +101,23 @@ class BottomNavigatorWidget extends StatelessWidget {
   }
 
   Widget _buildNavigationButton(int index, IconData filledIcon, IconData outlinedIcon) {
+    Widget iconWidget = Icon(
+      homePage.currentView == index ? filledIcon : outlinedIcon,
+      color: homePage.currentView == index ?
+      AppColors.getTheme().onPrimaryContainer :
+      AppColors.getTheme().onPrimaryContainer.withValues(alpha: .3),
+      size: 28,
+    );
+
+    if (index == 4 && homePage.unreadMailCount > 0) {
+      iconWidget = Badge.count(
+        count: homePage.unreadMailCount,
+        backgroundColor: AppColors.getTheme().primary,
+        textColor: AppColors.getTheme().onPrimary,
+        child: iconWidget,
+      );
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
@@ -124,13 +141,7 @@ class BottomNavigatorWidget extends StatelessWidget {
         splashColor: Colors.transparent,
         disabledColor: Colors.transparent,
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 13),
-        icon: Icon(
-          homePage.currentView == index ? filledIcon : outlinedIcon,
-          color: homePage.currentView == index ?
-          AppColors.getTheme().onPrimaryContainer :
-          AppColors.getTheme().onPrimaryContainer.withValues(alpha: .3),
-          size: 28,
-        ),
+        icon: iconWidget,
       ),
     );
   }

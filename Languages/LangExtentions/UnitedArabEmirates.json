@@ -189,5 +189,8 @@
   "topmenu_UnreadMessagesBadge": "%0 رسائل جديدة",
   "topmenu_NoUnreadMessages": "لا توجد رسائل جديدة",
   "topmenu_MessagesTitle": "الرسائل",
-  "topmenu_PaymentsTitle": "المدفوعات"
+  "topmenu_PaymentsTitle": "المدفوعات",
+  "calendarPage_weekNav_JumpToCurrentWeek": "الانتقال إلى الأسبوع الحالي",
+  "messagePage_MarkAllAsRead": "تعيين الكل كمقروء",
+  "messagePage_AllMarkedAsReadToast": "تم تعيين جميع الرسائل كمقروءة! ✉️"
 }

@@ -189,5 +189,8 @@
   "topmenu_UnreadMessagesBadge": "%0 нових повідомлень",
   "topmenu_NoUnreadMessages": "Немає нових повідомлень",
   "topmenu_MessagesTitle": "Повідомлення",
-  "topmenu_PaymentsTitle": "Платежі"
+  "topmenu_PaymentsTitle": "Платежі",
+  "calendarPage_weekNav_JumpToCurrentWeek": "Перейти до поточного тижня",
+  "messagePage_MarkAllAsRead": "Позначити всі як прочитані",
+  "messagePage_AllMarkedAsReadToast": "Всі повідомлення позначено як прочитані! ✉️"
 }

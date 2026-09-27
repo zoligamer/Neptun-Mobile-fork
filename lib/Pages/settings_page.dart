@@ -75,15 +75,15 @@ class _SettingsPageState extends State<SettingsPage> {
   // header helpers
   Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 25, 20, 10),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.getTheme().secondary, size: 20),
+          Icon(icon, color: AppColors.getTheme().primary, size: 20),
           const SizedBox(width: 10),
           Text(
             title.toUpperCase(),
             style: TextStyle(
-                color: AppColors.getTheme().secondary,
+                color: AppColors.getTheme().primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
                 letterSpacing: 1.2
@@ -91,6 +91,34 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSwitchTile({
+    required String title,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return SwitchListTile(
+      title: Text(
+        title,
+        style: TextStyle(
+          color: AppColors.getTheme().textColor,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      activeColor: AppColors.getTheme().primary,
+      activeTrackColor: AppColors.getTheme().primary.withValues(alpha: 0.35),
+      inactiveThumbColor: AppColors.getTheme().textColor.withValues(alpha: 0.6),
+      inactiveTrackColor: AppColors.getTheme().textColor.withValues(alpha: 0.15),
+      trackOutlineColor: WidgetStateProperty.resolveWith<Color?>((states) {
+        if (states.contains(WidgetState.selected)) {
+          return AppColors.getTheme().primary;
+        }
+        return AppColors.getTheme().textColor.withValues(alpha: 0.25);
+      }),
+      value: value,
+      onChanged: onChanged,
     );
   }
 
@@ -128,13 +156,14 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
                   color: AppColors.getTheme().textColor.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12)
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.getTheme().textColor.withValues(alpha: 0.12))
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _themesCurrSelect,
                   dropdownColor: AppColors.getTheme().rootBackground,
-                  icon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.getTheme().textColor),
+                  icon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.getTheme().primary),
                   isExpanded: true,
                   style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600),
                   items: AppColors.getThemesOnline().map((String value) {
@@ -186,7 +215,8 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
                   color: AppColors.getTheme().textColor.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12)
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.getTheme().textColor.withValues(alpha: 0.12))
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -194,7 +224,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ? _languageCurrSelect
                       : "${_availableLanguages.first.langFlag} ${_availableLanguages.first.langName}",
                   dropdownColor: AppColors.getTheme().rootBackground,
-                  icon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.getTheme().textColor),
+                  icon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.getTheme().primary),
                   isExpanded: true,
                   items: _availableLanguages.map((LangPackMap item) {
                     final strValue = "${item.langFlag} ${item.langName}";
@@ -267,8 +297,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   max: 1.4,
                   divisions: 6,
                   label: "${(_currentFontScale * 100).toInt()}%",
-                  activeColor: AppColors.getTheme().secondary,
-                  inactiveColor: AppColors.getTheme().textColor.withValues(alpha: 0.1),
+                  activeColor: AppColors.getTheme().primary,
+                  inactiveColor: AppColors.getTheme().textColor.withValues(alpha: 0.15),
+                  thumbColor: AppColors.getTheme().primary,
                   onChanged: (val) {
                     setState(() { _currentFontScale = val; });
                   },
@@ -286,9 +317,8 @@ class _SettingsPageState extends State<SettingsPage> {
           // --- 2. notifications ---
           _buildSectionHeader("Értesítések", Icons.notifications_active_rounded),
 
-          SwitchListTile(
-            title: Text(AppStrings.getLanguagePack().popup_case1_settingOption2_ExamNotifications, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600)),
-            activeThumbColor: AppColors.getTheme().secondary,
+          _buildSwitchTile(
+            title: AppStrings.getLanguagePack().popup_case1_settingOption2_ExamNotifications,
             value: DataCache.getNeedExamNotifications()!,
             onChanged: (b) {
               AppHaptics.lightImpact();
@@ -297,9 +327,8 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() {});
             },
           ),
-          SwitchListTile(
-            title: Text(AppStrings.getLanguagePack().popup_case1_settingOption3_ClassNotifications, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600)),
-            activeThumbColor: AppColors.getTheme().secondary,
+          _buildSwitchTile(
+            title: AppStrings.getLanguagePack().popup_case1_settingOption3_ClassNotifications,
             value: DataCache.getNeedClassNotifications()!,
             onChanged: (b) {
               AppHaptics.lightImpact();
@@ -308,9 +337,8 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() {});
             },
           ),
-          SwitchListTile(
-            title: Text(AppStrings.getLanguagePack().popup_case1_settingOption4_PaymentNotifications, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600)),
-            activeThumbColor: AppColors.getTheme().secondary,
+          _buildSwitchTile(
+            title: AppStrings.getLanguagePack().popup_case1_settingOption4_PaymentNotifications,
             value: DataCache.getNeedPaymentsNotifications()!,
             onChanged: (b) {
               AppHaptics.lightImpact();
@@ -319,9 +347,8 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() {});
             },
           ),
-          SwitchListTile(
-            title: Text(AppStrings.getLanguagePack().popup_case1_settingOption5_PeriodsNotifications, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600)),
-            activeThumbColor: AppColors.getTheme().secondary,
+          _buildSwitchTile(
+            title: AppStrings.getLanguagePack().popup_case1_settingOption5_PeriodsNotifications,
             value: DataCache.getNeedPeriodsNotifications()!,
             onChanged: (b) {
               AppHaptics.lightImpact();
@@ -334,9 +361,8 @@ class _SettingsPageState extends State<SettingsPage> {
           // --- 3. operation and others ---
           _buildSectionHeader("Működés és Egyéb", Icons.build_circle_rounded),
 
-          SwitchListTile(
-            title: Text(AppStrings.getLanguagePack().popup_case1_settingOption1_FamilyFriendlyLoadingText, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600)),
-            activeThumbColor: AppColors.getTheme().secondary,
+          _buildSwitchTile(
+            title: AppStrings.getLanguagePack().popup_case1_settingOption1_FamilyFriendlyLoadingText,
             value: DataCache.getNeedFamilyFriendlyComments()!,
             onChanged: (b) {
               AppHaptics.lightImpact();
@@ -344,9 +370,8 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() {});
             },
           ),
-          SwitchListTile(
-            title: Text(AppStrings.getLanguagePack().popup_case1_settingOption6_AppHaptics, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600)),
-            activeThumbColor: AppColors.getTheme().secondary,
+          _buildSwitchTile(
+            title: AppStrings.getLanguagePack().popup_case1_settingOption6_AppHaptics,
             value: DataCache.getNeedsHaptics()!,
             onChanged: (b) {
               AppHaptics.lightImpact();
@@ -359,18 +384,22 @@ class _SettingsPageState extends State<SettingsPage> {
             title: Text(AppStrings.getLanguagePack().popup_case1_settingOption7_WeekOffset, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600)),
             trailing: Container(
               width: 120,
-              decoration: BoxDecoration(color: AppColors.getTheme().textColor.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: AppColors.getTheme().textColor.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.getTheme().textColor.withValues(alpha: 0.12)),
+              ),
               child: Row(
                  children: [
                    IconButton(
-                     icon: Icon(Icons.remove, color: AppColors.getTheme().textColor, size: 18),
+                     icon: Icon(Icons.remove, color: AppColors.getTheme().primary, size: 18),
                      onPressed: () { AppHaptics.lightImpact(); HomePageState.settingsUserWeekOffsetAdd(-1); setState((){}); },
                    ),
                    Expanded(
                      child: Text(HomePageState.getUserWeekOffsetTextController().text.isEmpty ? "Auto" : HomePageState.getUserWeekOffsetTextController().text, textAlign: TextAlign.center, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.bold)),
                    ),
                    IconButton(
-                     icon: Icon(Icons.add, color: AppColors.getTheme().textColor, size: 18),
+                     icon: Icon(Icons.add, color: AppColors.getTheme().primary, size: 18),
                      onPressed: () { AppHaptics.lightImpact(); HomePageState.settingsUserWeekOffsetAdd(1); setState((){}); },
                    ),
                  ],
@@ -378,7 +407,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           ListTile(
-            leading: Icon(Icons.system_update_rounded, color: AppColors.getTheme().textColor),
+            leading: Icon(Icons.system_update_rounded, color: AppColors.getTheme().primary),
             title: Text(AppStrings.getLanguagePack().popup_case7_ButtonUpdateNow, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600)),
             trailing: Icon(Icons.chevron_right_rounded, color: AppColors.getTheme().textColor.withValues(alpha: 0.4)),
             onTap: () {

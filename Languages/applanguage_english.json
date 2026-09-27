@@ -177,5 +177,8 @@
   "topmenu_UnreadMessagesBadge": "%0 new messages",
   "topmenu_NoUnreadMessages": "No new messages",
   "topmenu_MessagesTitle": "Messages",
-  "topmenu_PaymentsTitle": "Payments"
+  "topmenu_PaymentsTitle": "Payments",
+  "calendarPage_weekNav_JumpToCurrentWeek": "Jump to current week",
+  "messagePage_MarkAllAsRead": "Mark all as read",
+  "messagePage_AllMarkedAsReadToast": "All messages marked as read! ✉️"
 }

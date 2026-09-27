@@ -189,5 +189,8 @@
   "topmenu_UnreadMessagesBadge": "%0 条新消息",
   "topmenu_NoUnreadMessages": "没有新消息",
   "topmenu_MessagesTitle": "消息",
-  "topmenu_PaymentsTitle": "付款"
+  "topmenu_PaymentsTitle": "付款",
+  "calendarPage_weekNav_JumpToCurrentWeek": "跳转到本周",
+  "messagePage_MarkAllAsRead": "全部标记为已读",
+  "messagePage_AllMarkedAsReadToast": "所有消息已标记为已读！✉️"
 }

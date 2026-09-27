@@ -726,10 +726,10 @@ class CalendarRequest {
         final endEpoch = int.parse(numRegex.firstMatch(endDateRaw)!.group(0)!);
 
         final startDate = DateTime.fromMillisecondsSinceEpoch(startEpoch);
-        final nextMonday = startDate.add(const Duration(days: 7));
+        final sunday = startDate.add(const Duration(days: 6));
 
         final startIso = "${startDate.year.toString().padLeft(4, '0')}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}T00:00:00.000";
-        final endIso = "${nextMonday.year.toString().padLeft(4, '0')}-${nextMonday.month.toString().padLeft(2, '0')}-${nextMonday.day.toString().padLeft(2, '0')}T23:59:59.999";
+        final endIso = "${sunday.year.toString().padLeft(4, '0')}-${sunday.month.toString().padLeft(2, '0')}-${sunday.day.toString().padLeft(2, '0')}T23:59:59.999";
 
         String baseUrl = storage.DataCache.getInstituteUrl() ?? '';
         String responseRaw = "";
@@ -839,6 +839,7 @@ class CalendarRequest {
 
         final newApiData = conv.json.decode(responseRaw);
         List<Map<String, dynamic>> mappedList = [];
+        final Set<String> seenEventKeys = {};
 
         if (newApiData is Map && newApiData['data'] != null) {
           var dataPart = newApiData['data'];
@@ -858,6 +859,15 @@ class CalendarRequest {
             final eventStartEpoch = DateTime.tryParse(startStr)?.millisecondsSinceEpoch ?? 0;
             final eventEndEpoch = DateTime.tryParse(endStr)?.millisecondsSinceEpoch ?? 0;
 
+            final title = event['name'] ?? event['subjectName'] ?? event['title'] ?? 'Ismeretlen';
+            final classInstanceId = event['classInstanceId']?.toString() ?? '';
+            final taskId = event['id']?.toString() ?? event['taskId']?.toString() ?? event['midTermTaskId']?.toString() ?? '';
+
+            final dedupeKey = "${classInstanceId}_${taskId}_${eventStartEpoch}_${eventEndEpoch}_$title";
+            if (!seenEventKeys.add(dedupeKey)) {
+              continue; // Duplikált esemény kihagyása
+            }
+
             final subjectCode = event['courseCode'] ?? event['subjectCode'] ?? '-';
             final courseType = event['courseTypeName'] ?? event['courseType'] ?? event['typeName'] ?? event['type'] ?? '';
 
@@ -865,13 +875,13 @@ class CalendarRequest {
               'start_ms': eventStartEpoch,
               'end_ms': eventEndEpoch,
               'location': event['rooms'] ?? event['room'] ?? event['location'] ?? 'Nincs megadva',
-              'title': event['name'] ?? event['subjectName'] ?? event['title'] ?? 'Ismeretlen',
+              'title': title,
               'type': typeId,
               'subjectCode': subjectCode,
               'courseType': courseType.toString(),
               'teacher': event['courseTutor'] ?? event['teacher'] ?? 'Nincs megadva',
-              'classInstanceId': event['classInstanceId']?.toString() ?? '',
-              'taskId': event['id']?.toString() ?? event['taskId']?.toString() ?? event['midTermTaskId']?.toString() ?? '',
+              'classInstanceId': classInstanceId,
+              'taskId': taskId,
             });
           }
         }
@@ -1396,8 +1406,13 @@ class CashinRequest{
     try {
       final List<dynamic> cashins = conv.json.decode(json)['CashinDataRows'];
       for (var cashin in cashins) {
+        int rawAmount = ((cashin['amount'] as num?) ?? 0).toInt().abs();
+        final name = (cashin['appellation']?.toString() ?? '').toLowerCase();
+        bool isReceiving = name.contains('ösztöndíj') || name.contains('támogatás') || name.contains('jutalom');
+        int amount = isReceiving ? rawAmount : -rawAmount;
+
         ls.add(CashinEntry(
-            cashin['amount'],
+            amount,
             int.parse(cashin['deadline'] == null ? '0' : cashin['deadline'].toString().replaceAll('/Date(', '').replaceAll(')/', '')),
             cashin['appellation'],
             cashin['ID'].toString(),

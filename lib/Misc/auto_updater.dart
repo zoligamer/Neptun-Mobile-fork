@@ -196,6 +196,19 @@ class AppUpdater {
     return true;
   }
 
+  static bool _isArm64Asset(String name) {
+    final n = name.toLowerCase();
+    return n.contains('arm8') || n.contains('arm-8') || n.contains('arm_8') ||
+           n.contains('arm64') || n.contains('arm-64') || n.contains('v8a') ||
+           n.contains('aarch64');
+  }
+
+  static bool _isArm32Asset(String name) {
+    final n = name.toLowerCase();
+    return n.contains('arm7') || n.contains('arm-7') || n.contains('arm_7') ||
+           n.contains('armv7') || n.contains('v7a') || n.contains('armeabi');
+  }
+
   /// Kiválasztja a CPU architektúrához leginkább illeszkedő APK-t a GitHub assets listából
   static Future<Map<String, dynamic>?> _selectBestAsset(List assets) async {
     final apkAssets = assets.where((a) {
@@ -209,46 +222,41 @@ class AppUpdater {
     final is64Bit = await _detectIs64Bit();
 
     if (is64Bit) {
-      // 1. Elsődleges: ARM8 / arm64 / v8a
+      // 1. Elsődleges: ARM8 / arm64 / v8a (pl. NeptunMobile_ARM8-v1.0.5.apk, app-arm64-v8a-release.apk)
       for (final a in apkAssets) {
-        final name = a['name'].toString().toLowerCase();
-        if (name.contains('arm8') || name.contains('arm64') || name.contains('v8a') || name.contains('aarch64')) {
+        final name = a['name']?.toString() ?? '';
+        if (_isArm64Asset(name)) {
           return a;
         }
       }
-      // 2. Univerzális (nem ARM7 specifikus)
+      // 2. Univerzális (nem ARM7-specifikus)
       for (final a in apkAssets) {
-        final name = a['name'].toString().toLowerCase();
-        if (!name.contains('arm7') && !name.contains('v7a') && !name.contains('armeabi') && !name.contains('v7')) {
+        final name = a['name']?.toString() ?? '';
+        if (!_isArm32Asset(name)) {
           return a;
         }
       }
-      // 3. Fallback ARM7-re ha van
-      for (final a in apkAssets) {
-        final name = a['name'].toString().toLowerCase();
-        if (name.contains('arm7') || name.contains('v7a') || name.contains('armeabi')) {
-          return a;
-        }
-      }
+      // 3. Fallback
+      return apkAssets.first;
     } else {
       // 32-bites eszköz (ARM7)
-      // 1. Elsődleges: ARM7 / v7a / armeabi
+      // 1. Elsődleges: ARM7 / v7a / armeabi (pl. NeptunMobile_ARM7-v1.0.5.apk, app-armeabi-v7a-release.apk)
       for (final a in apkAssets) {
-        final name = a['name'].toString().toLowerCase();
-        if (name.contains('arm7') || name.contains('v7a') || name.contains('armeabi') || name.contains('armv7')) {
+        final name = a['name']?.toString() ?? '';
+        if (_isArm32Asset(name)) {
           return a;
         }
       }
-      // 2. Univerzális (nem tartalmaz 64-bites címkét)
+      // 2. Univerzális (nem 64-bites specifikus)
       for (final a in apkAssets) {
-        final name = a['name'].toString().toLowerCase();
-        if (!name.contains('arm8') && !name.contains('arm64') && !name.contains('v8a') && !name.contains('aarch64')) {
+        final name = a['name']?.toString() ?? '';
+        if (!_isArm64Asset(name)) {
           return a;
         }
       }
+      // 3. Fallback
+      return apkAssets.first;
     }
-
-    return apkAssets.first;
   }
 
   /// Letöltés sávval és automatikus megnyitás
@@ -321,12 +329,41 @@ class AppUpdater {
     }
   }
 
-  /// Kinyeri a numerikus verzió szegmenseket (pl. "1.0.4+16" -> [1, 0, 4], "1.0.4A" -> [1, 0, 4])
+  /// Kinyeri a numerikus és szemantikus verzió szegmenseket
   static List<int> _parseVersionNumbers(String raw) {
-    final String base = raw.split('+')[0];
-    final matches = RegExp(r'\d+').allMatches(base);
-    if (matches.isEmpty) return [0];
-    return matches.map((m) => int.tryParse(m.group(0)!) ?? 0).toList();
+    if (raw.trim().isEmpty) return [0];
+
+    String cleaned = raw.trim();
+    if (cleaned.toLowerCase().startsWith('v')) {
+      cleaned = cleaned.substring(1);
+    }
+
+    final mainParts = cleaned.split(RegExp(r'[+\-]'));
+    final baseVersion = mainParts[0];
+    final buildPart = mainParts.length > 1 ? mainParts[1] : '';
+
+    List<int> numbers = [];
+    for (final seg in baseVersion.split('.')) {
+      final matches = RegExp(r'\d+').allMatches(seg);
+      for (final m in matches) {
+        numbers.add(int.tryParse(m.group(0)!) ?? 0);
+      }
+      final letterMatch = RegExp(r'[a-zA-Z]').firstMatch(seg);
+      if (letterMatch != null) {
+        final code = letterMatch.group(0)!.toUpperCase().codeUnitAt(0) - 64;
+        numbers.add(code);
+      }
+    }
+
+    if (buildPart.isNotEmpty) {
+      final buildMatch = RegExp(r'\d+').firstMatch(buildPart);
+      if (buildMatch != null) {
+        numbers.add(int.tryParse(buildMatch.group(0)!) ?? 0);
+      }
+    }
+
+    if (numbers.isEmpty) return [0];
+    return numbers;
   }
 
   /// Összehasonlítja a jelenlegi és a GitHubos verziószámot
