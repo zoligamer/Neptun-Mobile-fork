@@ -87,6 +87,114 @@ class _AppDrawerState extends State<AppDrawer> {
     return '$formatted $currSymbol';
   }
 
+  Widget _buildVersionBadge(BuildContext context, bool hasUpdate, String? latestTag) {
+    final currVer = AppUpdater.installedVersion.isNotEmpty
+        ? AppUpdater.installedVersion
+        : "1.0.5";
+    final displayVer = currVer.startsWith('v') ? currVer : "v$currVer";
+
+    if (hasUpdate && latestTag != null && latestTag.isNotEmpty) {
+      final cleanLatest = latestTag.startsWith('v') ? latestTag : "v$latestTag";
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            AppHaptics.attentionLightImpact();
+            final rootCtx = HomePageState.getContext() ?? context;
+            Navigator.pop(context);
+            AppUpdater.checkAndInstallUpdate(rootCtx, force: true);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.getTheme().errorRed.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.getTheme().errorRed.withValues(alpha: 0.4),
+                width: 1.2,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: AppColors.getTheme().errorRed,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    "!",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  cleanLatest,
+                  style: TextStyle(
+                    color: AppColors.getTheme().errorRed,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Up-to-date state
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () {
+          AppHaptics.lightImpact();
+          final rootCtx = HomePageState.getContext() ?? context;
+          AppUpdater.checkAndInstallUpdate(rootCtx, force: true);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.getTheme().textColor.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.getTheme().textColor.withValues(alpha: 0.12),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle_outline_rounded,
+                color: AppColors.getTheme().textColor.withValues(alpha: 0.45),
+                size: 14,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                displayVer,
+                style: TextStyle(
+                  color: AppColors.getTheme().textColor.withValues(alpha: 0.6),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -105,21 +213,38 @@ class _AppDrawerState extends State<AppDrawer> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: AppColors.getTheme().currentClassGreen,
-                    radius: 30,
-                    child: Text(
-                      widget.loggedInUsername.isNotEmpty ? widget.loggedInUsername[0].toUpperCase() : '?',
-                      style: TextStyle(color: AppColors.getTheme().rootBackground, fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: AppColors.getTheme().currentClassGreen,
+                        radius: 28,
+                        child: Text(
+                          widget.loggedInUsername.isNotEmpty ? widget.loggedInUsername[0].toUpperCase() : '?',
+                          style: TextStyle(color: AppColors.getTheme().rootBackground, fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: AppUpdater.hasUpdateNotifier,
+                        builder: (context, hasUpdate, _) {
+                          return ValueListenableBuilder<String?>(
+                            valueListenable: AppUpdater.latestVersionNotifier,
+                            builder: (context, latestTag, _) {
+                              return _buildVersionBadge(context, hasUpdate, latestTag);
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 14),
                   EmojiRichText(
                     text: AppStrings.getStringWithParams(AppStrings.getLanguagePack().topmenu_Greet, [widget.loggedInUsername]),
                     defaultStyle: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.bold, fontSize: 18),
                     emojiStyle: TextStyle(color: AppColors.getTheme().textColor, fontSize: 20, fontFamily: "Noto Color Emoji"),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   EmojiRichText(
                     text: AppStrings.getStringWithParams(AppStrings.getLanguagePack().topmenu_LoginPlace, [widget.loggedInURL]),
                     defaultStyle: TextStyle(color: AppColors.getTheme().textColor.withValues(alpha: 0.7), fontSize: 13),
@@ -315,12 +440,12 @@ class _AppDrawerState extends State<AppDrawer> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.calendar_month_rounded, size: 16, color: AppColors.getTheme().secondary),
+                                Icon(Icons.calendar_month_rounded, size: 16, color: AppColors.getTheme().primary),
                                 const SizedBox(width: 8),
                                 Text(
                                   AppStrings.getLanguagePack().topmenu_SemesterSelectorTitle.toUpperCase(),
                                   style: TextStyle(
-                                    color: AppColors.getTheme().secondary,
+                                    color: AppColors.getTheme().primary,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11,
                                     letterSpacing: 1.1,
@@ -428,6 +553,50 @@ class _AppDrawerState extends State<AppDrawer> {
                     ListTile(
                       leading: Icon(Icons.system_update_rounded, color: AppColors.getTheme().textColor),
                       title: Text(AppStrings.getLanguagePack().popup_case7_ButtonUpdateNow, style: TextStyle(color: AppColors.getTheme().textColor, fontWeight: FontWeight.w600)),
+                      trailing: ValueListenableBuilder<bool>(
+                        valueListenable: AppUpdater.hasUpdateNotifier,
+                        builder: (context, hasUpdate, _) {
+                          if (hasUpdate) {
+                            final latestTag = AppUpdater.latestVersionNotifier.value ?? '';
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.getTheme().errorRed.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.getTheme().errorRed.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 14,
+                                    height: 14,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.getTheme().errorRed,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      "!",
+                                      style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    latestTag.isNotEmpty ? latestTag : "Update",
+                                    style: TextStyle(
+                                      color: AppColors.getTheme().errorRed,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          return Icon(Icons.chevron_right_rounded, color: AppColors.getTheme().textColor.withValues(alpha: 0.3));
+                        },
+                      ),
                       onTap: () {
                         AppHaptics.lightImpact();
                         final rootContext = HomePageState.getContext() ?? context;

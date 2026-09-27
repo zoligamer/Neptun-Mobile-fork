@@ -214,7 +214,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin{
         }
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        AppUpdater.checkAndInstallUpdate(context);
+        AppUpdater.initialize().then((_) {
+          AppUpdater.checkSilentUpdate();
+        });
       });
     }
 

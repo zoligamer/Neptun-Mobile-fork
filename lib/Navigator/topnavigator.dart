@@ -3,6 +3,7 @@ import '../Pages/main_page.dart';
 import '../colors.dart';
 import '../haptics.dart';
 import '../Misc/emojirich_text.dart';
+import '../Misc/auto_updater.dart';
 
 class TopNavigatorWidget extends StatelessWidget{
   final HomePageState homePage;
@@ -60,21 +61,40 @@ class TopNavigatorWidget extends StatelessWidget{
               children: <Widget>[
                 Container(
                   margin: const EdgeInsets.fromLTRB(10, 0, 18, 6),
-                  child: IconButton(
-                    onPressed: (){
-                      AppHaptics.lightImpact();
-                      // EZ  MEG AZ ÚJ side menu!
-                      Scaffold.of(context).openDrawer();
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: AppUpdater.hasUpdateNotifier,
+                    builder: (context, hasUpdate, _) {
+                      return Badge(
+                        isLabelVisible: hasUpdate,
+                        backgroundColor: AppColors.getTheme().errorRed,
+                        smallSize: 10,
+                        largeSize: 16,
+                        label: const Text(
+                          "!",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        offset: const Offset(-2, -2),
+                        child: IconButton(
+                          onPressed: (){
+                            AppHaptics.lightImpact();
+                            Scaffold.of(context).openDrawer();
+                          },
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all(AppColors.getTheme().textColor.withValues(alpha: .1)),
+                            padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
+                          ),
+                          icon: Icon(
+                            Icons.menu_rounded,
+                            color: AppColors.getTheme().onPrimaryContainer,
+                            size: 24,
+                          ),
+                        ),
+                      );
                     },
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all(AppColors.getTheme().textColor.withValues(alpha: .1)),
-                      padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
-                    ),
-                    icon: Icon(
-                      Icons.menu_rounded,
-                      color: AppColors.getTheme().onPrimaryContainer,
-                      size: 24,
-                    ),
                   ),
                 ),
                 Flexible(

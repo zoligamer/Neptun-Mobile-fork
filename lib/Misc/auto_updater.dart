@@ -18,6 +18,82 @@ class AppUpdater {
   static const String repoOwner = "zoligamer";
   static const String repoName = "Neptun-Mobile-fork";
 
+  /// Reaktív értesítők a felület számára
+  static final ValueNotifier<bool> hasUpdateNotifier = ValueNotifier<bool>(false);
+  static final ValueNotifier<String?> latestVersionNotifier = ValueNotifier<String?>(null);
+  static String installedVersion = "1.0.5";
+  static String latestAvailableVersion = "";
+  static Map<String, dynamic>? latestReleaseData;
+
+  /// Inicializálás (verzió betöltése és gyorsított gyorsítótár-ellenőrzés)
+  static Future<void> initialize() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      installedVersion = packageInfo.version;
+    } catch (_) {
+      installedVersion = "1.0.5";
+    }
+
+    try {
+      final cachedLatest = await getString('CachedLatestReleaseTag');
+      if (cachedLatest != null && cachedLatest.isNotEmpty) {
+        latestAvailableVersion = cachedLatest;
+        if (_isNewerVersion(installedVersion, cachedLatest)) {
+          hasUpdateNotifier.value = true;
+          latestVersionNotifier.value = cachedLatest;
+        }
+      }
+    } catch (_) {}
+  }
+
+  /// Csendes háttérbeli lekérdezés a GitHub API-ról értesítési sávokhoz és jelvényekhez
+  static Future<void> checkSilentUpdate() async {
+    final conn = await Connectivity().checkConnectivity();
+    if (conn.contains(ConnectivityResult.none) && !conn.any((c) => c != ConnectivityResult.none)) {
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse("https://api.github.com/repos/$repoOwner/$repoName/releases/latest"),
+        headers: {
+          'User-Agent': 'Neptun2-App',
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      ).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode != 200) return;
+
+      final data = json.decode(response.body);
+      final latestTag = data['tag_name']?.toString() ?? '';
+      if (latestTag.isEmpty) return;
+
+      latestReleaseData = data;
+      latestAvailableVersion = latestTag;
+      await saveString('CachedLatestReleaseTag', latestTag);
+      await saveInt('ObsoleteAppVerUpdateCacheTime', DateTime.now().millisecondsSinceEpoch);
+
+      if (installedVersion.isEmpty) {
+        try {
+          final packageInfo = await PackageInfo.fromPlatform();
+          installedVersion = packageInfo.version;
+        } catch (_) {
+          installedVersion = "1.0.5";
+        }
+      }
+
+      if (_isNewerVersion(installedVersion, latestTag)) {
+        hasUpdateNotifier.value = true;
+        latestVersionNotifier.value = latestTag;
+      } else {
+        hasUpdateNotifier.value = false;
+        latestVersionNotifier.value = null;
+      }
+    } catch (e) {
+      debugPrint("Silent update check error: $e");
+    }
+  }
+
   /// Fő belépési pont.
   static Future<void> checkAndInstallUpdate(BuildContext? context, {bool force = false}) async {
     // 1. Internet ellenőrzés
@@ -81,11 +157,16 @@ class AppUpdater {
 
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version; // pl. 1.0.4 vagy 1.0.4+16
+      installedVersion = currentVersion;
+      latestAvailableVersion = latestTag;
 
-      // Elmentjük a sikeres ellenőrzés idejét
+      // Elmentjük a sikeres ellenőrzés idejét és tagjét
+      await saveString('CachedLatestReleaseTag', latestTag);
       await saveInt('ObsoleteAppVerUpdateCacheTime', DateTime.now().millisecondsSinceEpoch);
 
       if (_isNewerVersion(currentVersion, latestTag)) {
+        hasUpdateNotifier.value = true;
+        latestVersionNotifier.value = latestTag;
         BuildContext? activeContext = (context != null && context.mounted) ? context : HomePageState.getContext();
         if (activeContext == null || !activeContext.mounted) {
           debugPrint("Nem található érvényes BuildContext az update dialog megjelenítéséhez.");
@@ -100,6 +181,8 @@ class AppUpdater {
           }
         }
       } else {
+        hasUpdateNotifier.value = false;
+        latestVersionNotifier.value = null;
         if (force && Platform.isAndroid) {
           Fluttertoast.showToast(
             msg: "Az alkalmazás naprakész! (v$currentVersion)",
@@ -329,7 +412,7 @@ class AppUpdater {
     }
   }
 
-  /// Kinyeri a numerikus és szemantikus verzió szegmenseket
+  /// Kinyeri a numerikus és szemantikus verzió szegmenseket (pl. 1.0.5, 1.0.5R, 1.0.5-Hotfix, 1.0.5F, 1.0.5+20)
   static List<int> _parseVersionNumbers(String raw) {
     if (raw.trim().isEmpty) return [0];
 
@@ -338,27 +421,23 @@ class AppUpdater {
       cleaned = cleaned.substring(1);
     }
 
-    final mainParts = cleaned.split(RegExp(r'[+\-]'));
-    final baseVersion = mainParts[0];
-    final buildPart = mainParts.length > 1 ? mainParts[1] : '';
-
+    final segments = cleaned.split(RegExp(r'[.\-+_]'));
     List<int> numbers = [];
-    for (final seg in baseVersion.split('.')) {
+
+    for (final seg in segments) {
+      if (seg.isEmpty) continue;
       final matches = RegExp(r'\d+').allMatches(seg);
       for (final m in matches) {
         numbers.add(int.tryParse(m.group(0)!) ?? 0);
       }
-      final letterMatch = RegExp(r'[a-zA-Z]').firstMatch(seg);
-      if (letterMatch != null) {
-        final code = letterMatch.group(0)!.toUpperCase().codeUnitAt(0) - 64;
-        numbers.add(code);
-      }
-    }
-
-    if (buildPart.isNotEmpty) {
-      final buildMatch = RegExp(r'\d+').firstMatch(buildPart);
-      if (buildMatch != null) {
-        numbers.add(int.tryParse(buildMatch.group(0)!) ?? 0);
+      final letterMatches = RegExp(r'[a-zA-Z]+').allMatches(seg);
+      for (final lm in letterMatches) {
+        final str = lm.group(0)!.toUpperCase();
+        int charSum = 0;
+        for (int i = 0; i < str.length; i++) {
+          charSum = (charSum * 26) + (str.codeUnitAt(i) - 64);
+        }
+        numbers.add(charSum);
       }
     }
 
